@@ -18,6 +18,8 @@ The commit should follow best practices :
 * Use markdown bullet points for the body of the commit message to detail different changes.
 
 Do NOT add extra text, markdown formatting or quotes around the title or body.  The user will be taking the output to directly use in their commit message.
+
+If there is no diff output provided, you should just reply with "No changes to commit".
 """
 
 diff = ""
