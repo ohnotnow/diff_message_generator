@@ -1,4 +1,5 @@
 import subprocess
+import argparse
 from gepetto import groq, claude, gpt
 
 system_message = """
@@ -22,27 +23,37 @@ Do NOT add extra text, markdown formatting or quotes around the title or body.  
 If there is no diff output provided, you should just reply with "No changes to commit".
 """
 
-diff = ""
-completed_process = subprocess.run(['git', '--no-pager', 'diff', '--color-moved=no'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-exit_code = completed_process.returncode
-diff_stdout = completed_process.stdout.decode('utf-8')
-diff_stderr = completed_process.stderr.decode('utf-8')
+def main(context="", model="gpt-4-1106-preview"):
+    completed_process = subprocess.run(['git', '--no-pager', 'diff', '--color-moved=no'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    exit_code = completed_process.returncode
+    diff_stdout = completed_process.stdout.decode('utf-8')
+    diff_stderr = completed_process.stderr.decode('utf-8')
 
-if exit_code != 0:
-    print("Error running `git diff`")
-    print(diff_stderr)
-    exit(1)
+    if exit_code != 0:
+        print("Error running `git diff`")
+        print(diff_stderr)
+        exit(1)
 
-bot = gpt.GPTModelSync()
-response = bot.chat([
-    {
-        'role': 'system',
-        'content': system_message
-    },
-    {
-        'role': 'user',
-        'content': f"I have the following output from running `git diff`.  Could you give me a commit message for it?  <diff>{diff_stdout}</diff>"
-    }
-])
-commit_message = response.message.strip('"')
-print(response.message)
+    bot = gpt.GPTModelSync()
+    prompt = f"I have the following output from running `git diff`.  Could you give me a commit message for it?  <diff>{diff_stdout}</diff>"
+    if context:
+        prompt = f"{context}\n\n{prompt}\n\n"
+    response = bot.chat([
+        {
+            'role': 'system',
+            'content': system_message
+        },
+        {
+            'role': 'user',
+            'content': prompt
+        }
+    ], model=model)
+    commit_message = response.message.strip('"').strip('```').strip()
+    print(commit_message)
+
+if __name__ == "__main__":
+    args = argparse.ArgumentParser()
+    args.add_argument("--model", type=str, default="gpt-4-1106-preview")
+    args.add_argument("--context", type=str, default="")
+    args = args.parse_args()
+    main(args.context, args.model)

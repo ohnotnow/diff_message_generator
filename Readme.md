@@ -50,6 +50,12 @@ Refactor code for improved readability
 - Enhanced error handling in file processing
 ```
 
+## Options
+You can optionally add some extra freeform context to the LLM and also specifiy which model you want to use.
+```bash
+python main.py --model='gpt-3.5-turbo' --context='Feature: add new thing so users can do X'
+```
+
 ## Customisation
 There is a system prompt at the top of the script which tells the LLM the kind of commit messages you prefer.  Change that to make it more to your liking.
 
